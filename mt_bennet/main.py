@@ -1,3 +1,4 @@
+from parser import faz_o_parsing
 from mt_ordinaria import MaquinaTuring
 
 #perguntar dos simbolos
@@ -14,7 +15,7 @@ mt_original = MaquinaTuring(
     branco="_"
 )
 
-mt_original.executar("0110")
+#mt_original.executar("0110")
 
 #estavmos discorrendo sobre futuras implementacoes
 # ("q0", "0","8", "2")
@@ -24,3 +25,5 @@ mt_original.executar("0110")
 # ("q0",simbol)
 
 # movimentos = ("R","L","S")
+
+faz_o_parsing("entradaquintupla.txt")
