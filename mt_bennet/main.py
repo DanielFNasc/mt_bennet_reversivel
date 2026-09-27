@@ -1,3 +1,4 @@
+import sys
 from parser import faz_o_parsing
 from mt_ordinaria import MaquinaTuring
 from utils import transformar_quintuplas
@@ -29,7 +30,7 @@ mt_original = MaquinaTuring(
 
 
 
-estrutura = faz_o_parsing("entradaquintupla.txt")
+estrutura = faz_o_parsing(sys.argv[1])
 
 mt_original = MaquinaTuring(
     quintuplas=estrutura.quintuplas,
