@@ -34,14 +34,14 @@ def transformar_quintuplas(dicionario_q):
 
         leitura = (
             simbolo_lido,
-            "\\",
-            "\\"
+            "/",
+            "/"
         )
 
         escrita = (
             simbolo_escrito,
-            "\\",
-            "\\"
+            "/",
+            "/"
         )
 
         movimento_1 = (
@@ -73,15 +73,15 @@ def transformar_quintuplas(dicionario_q):
         #
 
         leitura = (
-            "\\",
-            "\\",
-            "\\"
+            "/",
+            "/",
+            "/"
         )
 
         escrita = (
-            "\\",
+            "/",
             str(numero_quintupla),
-            "\\"
+            "/"
         )
 
         movimento_2 = (
