@@ -1,5 +1,6 @@
 from parser import faz_o_parsing
 from mt_ordinaria import MaquinaTuring
+from utils import transformar_quintuplas
 #perguntar dos simbolos
 """transicoes_mt = {
     ("q0", "0"): ("q0", "1", "R"),
@@ -26,6 +27,8 @@ mt_original = MaquinaTuring(
 # movimentos = ("R","L","S")
 
 
+
+
 estrutura = faz_o_parsing("entradaquintupla.txt")
 
 mt_original = MaquinaTuring(
@@ -34,5 +37,6 @@ mt_original = MaquinaTuring(
     estado_final=estrutura.estado_aceitacao,
     branco="B",
 )
-
-mt_original.executar(estrutura.entrada)
+print(mt_original.transicoes)
+transformar_quintuplas(mt_original.transicoes)
+#mt_original.executar(estrutura.entrada)
