@@ -1,4 +1,3 @@
-from Quadrupla import Quadrupla
 
 def gerar_regras_copia(alfabeto, estado_inicio_copia, estado_fim_copia, branco="_"):
     

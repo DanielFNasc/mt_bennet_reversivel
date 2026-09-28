@@ -70,21 +70,24 @@ fitas = [
 
 simulador = Simulador(branco=BRANCO)
 
-# FASE 1: COMPUTE 
-print("Executando TUDO...")
-estado, passos = simulador.executar(
-    quadruplas,
-    estado_inicial=estrutura.estado_inicial,
-    estado_final=f"C_{estrutura.estado_inicial}",
-    fitas=fitas, 
-) 
+# # TUDO DE UMA VEZ 
+# print("Executando TUDO...")
+# estado, passos = simulador.executar(
+#     quadruplas,
+#     estado_inicial=estrutura.estado_inicial,
+#     estado_final=f"C_{estrutura.estado_inicial}",
+#     fitas=fitas, 
+# ) 
 
-print(f"Passos: {passos}") 
+# print(f"Passos: {passos}") 
+# print(f"Fita 1: {fitas[0]}") 
+# print(f"Fita 2: {fitas[1]}") 
+# print(f"Fita 3: {fitas[2]}")
+
+print("Entrada")
 print(f"Fita 1: {fitas[0]}") 
 print(f"Fita 2: {fitas[1]}") 
 print(f"Fita 3: {fitas[2]}")
-
-
 # FASE 1: COMPUTE 
 print("Executando fase 1...")
 estado, passos = simulador.executar(
@@ -92,6 +95,12 @@ estado, passos = simulador.executar(
     estado_inicial=estrutura.estado_inicial,
     estado_final=estrutura.estado_aceitacao,
     fitas=fitas,) 
+
+print(f"Estado final da Fase 1: {estado}") 
+print(f"Passos: {passos}") 
+print(f"Fita 1: {fitas[0]}") 
+print(f"Fita 2: {fitas[1]}") 
+print(f"Fita 3: {fitas[2]}")
 
 
 # FASE 2: COPY OUTPUT
@@ -102,6 +111,11 @@ estado, passos = simulador.executar(
     estado_final=f"C_{estrutura.estado_aceitacao}",
     fitas=fitas,
 )
+print(f"Estado final da Fase 2: {estado}") 
+print(f"Passos: {passos}") 
+print(f"Fita 1: {fitas[0]}") 
+print(f"Fita 2: {fitas[1]}") 
+print(f"Fita 3: {fitas[2]}")
 
 # FASE 3: RETRACE 
 print("=== FASE 3: RETRACE ===")

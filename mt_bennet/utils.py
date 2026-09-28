@@ -100,5 +100,4 @@ def transformar_quintuplas(dicionario_q):
 
         numero_quintupla += 1
 
-    print(dicionario_quadrupla)
     return dicionario_quadrupla
