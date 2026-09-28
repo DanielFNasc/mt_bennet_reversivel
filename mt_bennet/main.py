@@ -6,6 +6,7 @@ from inversas import gerar_estagio3
 from simulador import Simulador
 from fita import Fita
 from estagio_copia import gerar_regras_copia
+from fase2 import gerar_estagio2
 
 BRANCO = "_"
 
@@ -33,12 +34,15 @@ print()
 quadruplas_estagio1 = transformar_quintuplas(mt_original.transicoes)
 
 # FASE 2: Gera regras de cópia baseadas em transições de estados
-quadruplas_estagio2 = gerar_regras_copia(
-    alfabeto=["0", "1", "_", "$", "X"], 
-    estado_inicio_copia=estrutura.estado_aceitacao,
-    estado_fim_copia=f"C_{estrutura.estado_aceitacao}",
-    branco=BRANCO
-)
+# quadruplas_estagio2 = gerar_regras_copia(
+#     alfabeto=["0", "1", "_", "$", "X"], 
+#     estado_inicio_copia=estrutura.estado_aceitacao,
+#     estado_fim_copia=f"C_{estrutura.estado_aceitacao}",
+#     branco=BRANCO
+# )
+
+quadruplas_estagio2 = gerar_estagio2(estrutura.estado_aceitacao,estrutura.num_transicoes,estrutura.alfabeto_fita,
+                                    BRANCO)
 
 # FASE 3: gera as inversas das quádruplas da Fase 1 
 quadruplas_estagio3 = gerar_estagio3(quadruplas_estagio1)
@@ -52,6 +56,7 @@ quadruplas = {}
 quadruplas.update(quadruplas_estagio1)
 quadruplas.update(quadruplas_estagio2)
 quadruplas.update(quadruplas_estagio3)
+print(quadruplas)
 
 # Três fitas: 
 # fita 1 = trabalho 
@@ -66,18 +71,28 @@ fitas = [
 simulador = Simulador(branco=BRANCO)
 
 # FASE 1: COMPUTE 
-print("Executando Fase 1...")
+print("Executando TUDO...")
+estado, passos = simulador.executar(
+    quadruplas,
+    estado_inicial=estrutura.estado_inicial,
+    estado_final=f"C_{estrutura.estado_inicial}",
+    fitas=fitas, 
+) 
+
+print(f"Passos: {passos}") 
+print(f"Fita 1: {fitas[0]}") 
+print(f"Fita 2: {fitas[1]}") 
+print(f"Fita 3: {fitas[2]}")
+
+
+# FASE 1: COMPUTE 
+print("Executando fase 1...")
 estado, passos = simulador.executar(
     quadruplas_estagio1,
     estado_inicial=estrutura.estado_inicial,
     estado_final=estrutura.estado_aceitacao,
-    fitas=fitas, 
-) 
+    fitas=fitas,) 
 
-pos_final_fita1 = fitas[0].posicao
-pos_final_fita2 = fitas[1].posicao
-fitas[0].posicao = 0  
-fitas[1].posicao = 0  
 
 # FASE 2: COPY OUTPUT
 print("=== FASE 2: COPY OUTPUT ===")
@@ -87,10 +102,6 @@ estado, passos = simulador.executar(
     estado_final=f"C_{estrutura.estado_aceitacao}",
     fitas=fitas,
 )
-
-# Restaura posições...
-fitas[0].posicao = pos_final_fita1
-fitas[1].posicao = pos_final_fita2
 
 # FASE 3: RETRACE 
 print("=== FASE 3: RETRACE ===")
