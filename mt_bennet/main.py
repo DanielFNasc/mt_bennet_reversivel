@@ -63,45 +63,45 @@ fitas = [
     Fita("", branco=BRANCO),
 ]
 
-simulador = Simulador(quadruplas, branco=BRANCO)
+simulador = Simulador(branco=BRANCO)
 
 # FASE 1: COMPUTE 
 print("Executando Fase 1...")
 estado, passos = simulador.executar(
+    quadruplas_estagio1,
     estado_inicial=estrutura.estado_inicial,
     estado_final=estrutura.estado_aceitacao,
     fitas=fitas, 
 ) 
 
-#guarda as posições finais para fase 3
 pos_final_fita1 = fitas[0].posicao
 pos_final_fita2 = fitas[1].posicao
-
-# rebobina as fitas para o inicio antes da copia
 fitas[0].posicao = 0  
 fitas[1].posicao = 0  
 
-# FASE 2: COPY OUTPUT POR ESTADOS
-print("Executando Fase 2")
+# FASE 2: COPY OUTPUT
+print("=== FASE 2: COPY OUTPUT ===")
 estado, passos = simulador.executar(
+    quadruplas_estagio2,
     estado_inicial=estrutura.estado_aceitacao,
     estado_final=f"C_{estrutura.estado_aceitacao}",
     fitas=fitas,
 )
 
-#restaura as posições para fase 3
+# Restaura posições...
 fitas[0].posicao = pos_final_fita1
 fitas[1].posicao = pos_final_fita2
 
 # FASE 3: RETRACE 
-print("=== FASE 3: RETRACE / INVERSAS ===") 
+print("=== FASE 3: RETRACE ===")
 estado_inicial_retrace = f"C_{estrutura.estado_aceitacao}" 
 estado_final_retrace = f"C_{estrutura.estado_inicial}" 
 estado, passos = simulador.executar( 
+    quadruplas_estagio3,
     estado_inicial=estado_inicial_retrace, 
     estado_final=estado_final_retrace, 
     fitas=fitas, 
-) 
+)
 print(f"Estado final da Fase 3: {estado}") 
 print(f"Passos: {passos}") 
 print(f"Fita 1: {fitas[0]}") 
