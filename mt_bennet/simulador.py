@@ -1,95 +1,237 @@
+#Simulador da maquina reversivel de Bennett com tres fitas.
+#manter as tres fitas
+#executar quadruplas
+#executar os tres estagios de Bennett quando recebe as transicoes
+
 from fita import Fita
 
 NAO_LIDO = "/"
 
 
 class Simulador:
-    def __init__(self, quadruplas, branco="_"):
-        self.quadruplas = quadruplas
+    #Executa uma maquina de Turing reversivel de 3 fitas
+
+    def __init__(self, branco="_", max_passos=100000):
         self.branco = branco
+        self.max_passos = max_passos
 
-        # indexa as quadruplas por estado, pois o "/" na leitura e um
-        # coringa ("fita nao lida") que combina com qualquer simbolo -
-        # nao da pra usar (estado, leitura_exata) como chave de busca.
-        self._por_estado = {}
+    @staticmethod
+    def criar_fitas(entrada, branco="_"):
+        #Cria as fitas iniciais: trabalho, historico e saida
+        return [
+            Fita(entrada, branco),
+            Fita("", branco),
+            Fita("", branco),
+        ]
+
+    @staticmethod
+    def _indexar(quadruplas):
+        #Indexa transicoes por estado, pois '/' funciona como coringa
+        por_estado = {}
         for (estado, leitura), valor in quadruplas.items():
-            self._por_estado.setdefault(estado, []).append((leitura, valor))
+            por_estado.setdefault(estado, []).append((leitura, valor))
+        return por_estado
 
-    def _combina(self, padrao, leitura_real):
-        return all(p == NAO_LIDO or p == r for p, r in zip(padrao, leitura_real))
+    @staticmethod
+    def _combina(padrao, leitura_real):
+        return all(
+            esperado == NAO_LIDO or esperado == real
+            for esperado, real in zip(padrao, leitura_real)
+        )
 
-    def passo(self, estado, fitas):
-        """Executa um unico passo a partir do estado atual. Retorna o
-        novo estado, ou None se nao houver transicao definida (parada)."""
-        leitura_atual = tuple(f.ler() for f in fitas)
+    def passo(self, estado, fitas, quadruplas):
+        #Executa uma quadrupla a partir do estado informado
+        if len(fitas) != 3:
+            raise ValueError("A maquina reversivel de Bennett usa exatamente 3 fitas.")
 
-        candidatas = self._por_estado.get(estado, [])
-        encontrados = [v for (padrao, v) in candidatas if self._combina(padrao, leitura_atual)]
+        por_estado = self._indexar(quadruplas)
+        leitura_real = tuple(fita.ler() for fita in fitas)
+
+        encontrados = [
+            valor
+            for padrao, valor in por_estado.get(estado, [])
+            if self._combina(padrao, leitura_real)
+        ]
 
         if not encontrados:
             return None
+
         if len(encontrados) > 1:
             raise RuntimeError(
-                f"Determinismo violado: mais de uma quadrupla combina com "
-                f"estado='{estado}', leitura={leitura_atual}"
+                "Determinismo violado: mais de uma quadrupla combina com "
+                f"estado={estado!r}, leitura={leitura_real!r}"
             )
 
-        proximo_estado, escrita, movimento = encontrados[0]
+        proximo_estado, escrita, movimentos = encontrados[0]
 
-        for k, fita_k in enumerate(fitas):
-            if escrita[k] != NAO_LIDO:
-                fita_k.escrever(escrita[k])
-            if movimento[k] != "S":
-                fita_k.mover(movimento[k])
+        for fita, simbolo, movimento in zip(fitas, escrita, movimentos):
+            if simbolo != NAO_LIDO:
+                fita.escrever(simbolo)
+            if movimento != "S":
+                fita.mover(movimento)
 
         return proximo_estado
 
-    def executar(self, estado_inicial, estado_final, fitas, max_passos=100000, verboso=False):
-        #Executa ate atingir estado_final (ou estourar max_passos)
+    def executar(
+        self,
+        quadruplas,
+        estado_inicial,
+        estado_final,
+        fitas,
+        verboso=False,
+    ):
+        #Executa transicoes ate chegar ao estado_final
         estado = estado_inicial
         passos = 0
+        por_estado = self._indexar(quadruplas)
 
         while estado != estado_final:
-            if verboso:
-                print(f"  estado={estado:<12} " + " | ".join(str(f) for f in fitas))
+            leitura_real = tuple(fita.ler() for fita in fitas)
 
-            novo_estado = self.passo(estado, fitas)
-            if novo_estado is None:
+            encontrados = [
+                valor
+                for padrao, valor in por_estado.get(estado, [])
+                if self._combina(padrao, leitura_real)
+            ]
+
+            if not encontrados:
                 raise RuntimeError(
-                    f"Nenhuma transicao definida para o estado '{estado}' "
-                    f"com leitura {tuple(f.ler() for f in fitas)}"
+                    f"Nenhuma transicao definida para o estado {estado!r} "
+                    f"com leitura {leitura_real!r}."
                 )
-            estado = novo_estado
+
+            if len(encontrados) > 1:
+                raise RuntimeError(
+                    "Determinismo violado: mais de uma quadrupla combina com "
+                    f"estado={estado!r}, leitura={leitura_real!r}"
+                )
+
+            proximo_estado, escrita, movimentos = encontrados[0]
+
+            if verboso:
+                self.mostrar_configuracao(estado, fitas, passos)
+
+            for fita, simbolo, movimento in zip(fitas, escrita, movimentos):
+                if simbolo != NAO_LIDO:
+                    fita.escrever(simbolo)
+                if movimento != "S":
+                    fita.mover(movimento)
+
+            estado = proximo_estado
             passos += 1
 
-            if passos > max_passos:
-                raise RuntimeError("Numero maximo de passos excedido (possivel loop infinito)")
+            if passos > self.max_passos:
+                raise RuntimeError(
+                    "Numero maximo de passos excedido (possivel loop infinito)."
+                )
 
         if verboso:
-            print(f"  estado={estado:<12} " + " | ".join(str(f) for f in fitas))
+            self.mostrar_configuracao(estado, fitas, passos)
 
         return estado, passos
 
+    def executar_estagio1(
+        self,
+        quadruplas_estagio1,
+        estado_inicial,
+        estado_aceitacao,
+        fitas,
+        verboso=False,
+    ):
+        #Executa o Compute (Fase 1)
+        return self.executar(
+            quadruplas_estagio1,
+            estado_inicial,
+            estado_aceitacao,
+            fitas,
+            verboso,
+        )
 
-def copiar_fita(fita_origem, fita_destino):
-    
-    #Fase 2 (Copy output) simplificada: copia o conteudo nao-branco da fita de trabalho para a fita de saida, celula a celula.
-    # ISSO AINDA TEM QUE SER FEITO
-    #     
-    if not fita_origem.celulas:
-        return
+    def executar_estagio2(
+        self,
+        quadruplas_estagio2,
+        estado_aceitacao,
+        fitas,
+        verboso=False,
+    ):
+        #Executa o Copy Output (Fase 2)
+        estado_inicial = estado_aceitacao
+        estado_final = f"C_{estado_aceitacao}"
+        return self.executar(
+            quadruplas_estagio2,
+            estado_inicial,
+            estado_final,
+            fitas,
+            verboso,
+        )
 
-    posicoes_com_dado = [
-        p for p, s in fita_origem.celulas.items() if s != fita_origem.branco
-    ]
-    if not posicoes_com_dado:
-        return
+    def executar_estagio3(
+        self,
+        quadruplas_estagio3,
+        estado_inicial,
+        estado_aceitacao,
+        fitas,
+        verboso=False,
+    ):
+        #Executa o Retrace (Fase 3)
+        estado_inicial_retrace = f"C_{estado_aceitacao}"
+        estado_final_retrace = f"C_{estado_inicial}"
+        return self.executar(
+            quadruplas_estagio3,
+            estado_inicial_retrace,
+            estado_final_retrace,
+            fitas,
+            verboso,
+        )
 
-    inicio = min(posicoes_com_dado)
-    fim = max(posicoes_com_dado)
+    def executar_bennett(
+        self,
+        quadruplas_estagio1,
+        quadruplas_estagio2,
+        quadruplas_estagio3,
+        entrada,
+        estado_inicial,
+        estado_aceitacao,
+        verboso=False,
+    ):
+        """Executa Compute -> Copy Output -> Retrace."""
+        fitas = self.criar_fitas(entrada, self.branco)
 
-    deslocamento = 1 - inicio  # a primeira posicao com dado vira a posicao 1
-    for posicao in range(inicio, fim + 1):
-        simbolo = fita_origem.celulas.get(posicao, fita_origem.branco)
-        if simbolo != fita_origem.branco:
-            fita_destino.celulas[posicao + deslocamento] = simbolo
+        resultado_1 = self.executar_estagio1(
+            quadruplas_estagio1,
+            estado_inicial,
+            estado_aceitacao,
+            fitas,
+            verboso,
+        )
+
+        resultado_2 = self.executar_estagio2(
+            quadruplas_estagio2,
+            estado_aceitacao,
+            fitas,
+            verboso,
+        )
+
+        resultado_3 = self.executar_estagio3(
+            quadruplas_estagio3,
+            estado_inicial,
+            estado_aceitacao,
+            fitas,
+            verboso,
+        )
+
+        return {
+            "fitas": fitas,
+            "estagio1": resultado_1,
+            "estagio2": resultado_2,
+            "estagio3": resultado_3,
+        }
+
+    @staticmethod
+    def mostrar_configuracao(estado, fitas, passo):
+        fitas_texto = " | ".join(str(fita) for fita in fitas)
+        print(f"passo={passo:<5} estado={estado:<18} {fitas_texto}")
+
+
+# Compatibilidade caso algum outro arquivo ainda importe o nome antigo.
+SimuladorQuadruplas = Simulador
